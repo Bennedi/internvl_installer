@@ -6,3 +6,5 @@ model/
 
 # Ignore distribution files
 dist/
+
+Releases/

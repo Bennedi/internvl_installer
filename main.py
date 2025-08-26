@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 from typing import List
 from io import BytesIO
+import velopack
 import tika
 import re
 from tika import parser as p
@@ -11,7 +12,6 @@ import mimetypes
 import argparse
 parser = argparse.ArgumentParser(description='Process environment profile.')
 parser.add_argument('--port', type=int, help='Port to use for environment setup')
-
 
 def run_trayicon():
     from pystray import MenuItem as item
@@ -41,20 +41,7 @@ def run_trayicon():
         logger.info(f"{current_time} - Go to Log Folder")
         subprocess.Popen(['explorer', os.path.abspath(log_folder_path)]) 
         # popen(['explorer', os.path.abspath(log_folder_path)])
-    def update_app():
-        import velopack
-        logger.info(f"{current_time} - Check Application Update")
-        manager = velopack.UpdateManager("https://the.place/you-host/updates")
-
-        update_info = manager.check_for_updates()
-        if not update_info:
-            return # no updates available
-
-        # Download the updates, optionally providing progress callbacks
-        manager.download_updates(update_info)
-
-        # Apply the update and restart the app
-        manager.apply_updates_and_restart(update_info)
+    
     from plyer import notification
     def show_notification1(message):
         notification.notify(
@@ -77,8 +64,8 @@ def run_trayicon():
         threading.Thread(target=lambda: show_notification2("The dictionary is the latest version")).start()
 
     def exit_action(icon, item):
-        logger.info(f"{current_time} - Application OCR Stopped")
-        os._exit(0)        
+        logger.info(f"{current_time} - Application iCapture stopped")
+        os._exit(0)
 
     def update_env_variable(key, value, env_file_path=env_file_path):
         with open(env_file_path, "r") as file:
@@ -110,7 +97,7 @@ def run_trayicon():
             exit_action(icon, item)
 
     sep = pystray.Menu.SEPARATOR
-    disabled_item = pystray.MenuItem('iCapture-1.0', versionOcr, enabled=False)
+    disabled_item = pystray.MenuItem('iCapture-1.1', versionOcr, enabled=False)
 
     def setup_program(icon):
         for i in range(5):
@@ -130,7 +117,6 @@ def run_trayicon():
         disabled_item,
         sep,
         item('Open Log', log_action),
-        item('Check Application Update', check_app_update),
         item('Exit', exit_action)
     )
     
@@ -400,6 +386,21 @@ def main():
     run_trayicon()
     uvicorn.run(app, host="0.0.0.0", port=port, reload=False, log_level="info")
 
+
 if __name__ == "__main__":
-    print("Hi")
-    main()
+    import sys
+    if getattr(sys, 'frozen', False):  # Only check for updates when running as packaged app
+        try:
+            um = velopack.UpdateManager("https://github.com/Bennedi/internvl_installer")
+            update_info = um.check_for_updates()
+            print(f"Update info: {update_info}")
+            if update_info:
+                um.download_updates(update_info)
+                um.apply_updates_and_restart(update_info)
+            main()
+        except RuntimeError as e:
+            if "Could not auto-locate app manifest" in str(e):
+                print("Running in development mode, skipping updates")
+            else:
+                raise
+   
