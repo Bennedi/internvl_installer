@@ -1,0 +1,16 @@
+accelerate<1
+bitsandbytes==0.42.0
+einops==0.6.1
+einops-exts==0.0.4
+numpy==1.26.4
+sentencepiece==0.1.99
+timm==0.9.12
+transformers==4.37.2
+fastapi==0.115.12
+uvicorn==0.34.1
+python-multipart==0.0.20
+python-dotenv==1.1.0
+pdf2image==1.17.0 # add install apt-get install poppler-utils
+torch==2.2.2
+torchvision==0.17.2
+torchaudio==2.2.2
