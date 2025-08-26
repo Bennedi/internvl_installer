@@ -386,10 +386,9 @@ def main():
     run_trayicon()
     uvicorn.run(app, host="0.0.0.0", port=port, reload=False, log_level="info")
 
-
 if __name__ == "__main__":
     import sys
-    if getattr(sys, 'frozen', False):  # Only check for updates when running as packaged app
+    if getattr(sys, 'frozen', False):
         try:
             um = velopack.UpdateManager("https://github.com/Bennedi/internvl_installer")
             update_info = um.check_for_updates()
@@ -397,10 +396,12 @@ if __name__ == "__main__":
             if update_info:
                 um.download_updates(update_info)
                 um.apply_updates_and_restart(update_info)
-            main()
         except RuntimeError as e:
             if "Could not auto-locate app manifest" in str(e):
                 print("Running in development mode, skipping updates")
             else:
-                raise
+                print(f"Update check failed: {e}. Continuing without update.")
+        except Exception as e:
+            print(f"Update check failed: {e}. Continuing without update.")
+    main()
    
